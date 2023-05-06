@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { prisma } from "@/lib/prisma";
 import NextAuth from "next-auth";
 import type { NextAuthOptions } from "next-auth";
@@ -8,11 +7,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, _ }) {
       // Send properties to the client, like an access_token and user id from a provider.
-      const fetchedUser = await prisma?.user.findUnique({
-        where: { email: session.user?.email as string },
-        select: { email: true, id: true, name: true },
-      });
-      return { ...session, user: fetchedUser };
+      if (session.user) {
+        const fetchedUser = await prisma?.user.findUnique({
+          where: { email: session.user?.email as string },
+          select: { email: true, id: true, name: true },
+        });
+        return { ...session, user: fetchedUser };
+      }
+      return session;
     },
   },
   session: {
@@ -36,15 +38,20 @@ export const authOptions: NextAuthOptions = {
           (credentials?.email.length as number) > 2 &&
           (credentials?.password.length as number) > 2
         ) {
-          const user = await prisma?.user.upsert({
+          const user = await prisma?.user.findUnique({
             where: { email: credentials?.email },
-            update: {},
-            create: {
-              email: credentials?.email as string,
-              password: credentials?.password as string,
-            },
           });
-          return user;
+          if (user) {
+            return user;
+          } else {
+            const user = await prisma.user.create({
+              data: {
+                email: credentials?.email as string,
+                password: credentials?.password as string,
+              },
+            });
+            return user;
+          }
         } else {
           return null;
         }
