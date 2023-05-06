@@ -46,3 +46,7 @@
 //   const post = await prisma.note.delete({ where: { id: id as string } });
 //   return new Response(JSON.stringify(post));
 // }
+
+export async function GET() {
+  return new Response(JSON.stringify({ message: "hello" }));
+}
