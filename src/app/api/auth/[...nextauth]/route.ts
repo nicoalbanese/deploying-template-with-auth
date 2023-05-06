@@ -1,14 +1,14 @@
 // @ts-nocheck
 import { prisma } from "@/lib/prisma";
-import NextAuth, { Session } from "next-auth";
+import NextAuth from "next-auth";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    async session({ session, token, user }) {
+    async session({ session, _ }) {
       // Send properties to the client, like an access_token and user id from a provider.
-      const fetchedUser = await prisma.user.findUnique({
+      const fetchedUser = await prisma?.user.findUnique({
         where: { email: session.user?.email as string },
         select: { email: true, id: true, name: true },
       });
